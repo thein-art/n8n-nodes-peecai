@@ -137,6 +137,15 @@ npm run dev      # Watch mode for development
 
 ## Version History
 
+### 0.3.1
+- CI/CD pipeline: automated releases via git tags, npm publish with OIDC trusted publishing
+- Added Dependabot for dependency updates
+
+### 0.3.0
+- Refactored node to resource-based file structure
+- Added n8n node linter compliance
+- Improved error handling and parameter descriptions
+
 ### 0.2.0
 - Synced types with Peec AI API spec
 - Added server-side filters and drift detection for reports
