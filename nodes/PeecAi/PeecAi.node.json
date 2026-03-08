@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-peecai.peecAi",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Marketing & Growth"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/thein-art/n8n-nodes-peecai"
+			}
+		],
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/thein-art/n8n-nodes-peecai#credentials"
+			}
+		]
+	}
+}

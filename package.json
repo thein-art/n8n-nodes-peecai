@@ -1,0 +1,49 @@
+{
+  "name": "n8n-nodes-peecai",
+  "version": "0.1.0",
+  "description": "n8n community node for the Peec.ai API — AI Search Analytics for brand visibility, sentiment, and citations",
+  "license": "MIT",
+  "author": {
+    "name": "Tobias Hein",
+    "email": "t.hein@artaxo.com"
+  },
+  "homepage": "https://github.com/thein-art/n8n-nodes-peecai#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thein-art/n8n-nodes-peecai.git"
+  },
+  "keywords": [
+    "n8n-community-node-package",
+    "peecai",
+    "peec-ai",
+    "ai-search",
+    "brand-visibility",
+    "ai-analytics"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "eslint nodes credentials --ext .ts",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/PeecAiApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/PeecAi/PeecAi.node.js"
+    ]
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "devDependencies": {
+    "n8n-workflow": "*",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}
