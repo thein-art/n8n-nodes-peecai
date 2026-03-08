@@ -1,25 +1,29 @@
 import type {
 	IDataObject,
 	IExecuteFunctions,
+	ILoadOptionsFunctions,
 	INodeExecutionData,
+	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
 	IHttpRequestMethods,
+	JsonObject,
 } from 'n8n-workflow';
-import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 const BASE_URL = 'https://api.peec.ai/customer/v1';
 
 export class PeecAi implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Peec.ai',
+		displayName: 'Peec AI',
 		name: 'peecAi',
+		icon: 'file:peecAi.svg',
 		group: ['input'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
-		description: 'AI Search Analytics — brand visibility, sentiment, and citations across ChatGPT, Perplexity, and other AI models',
+		description: 'Monitor and analyze your brand visibility across AI search engines like ChatGPT, Perplexity, Gemini, and others. Track citations, sentiment, and competitive positioning.',
 		defaults: {
-			name: 'Peec.ai',
+			name: 'Peec AI',
 		},
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
@@ -38,16 +42,16 @@ export class PeecAi implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'Brand', value: 'brand' },
-					{ name: 'Brand Report', value: 'brandReport' },
-					{ name: 'Chat', value: 'chat' },
-					{ name: 'Domain Report', value: 'domainReport' },
-					{ name: 'Model', value: 'model' },
-					{ name: 'Project', value: 'project' },
-					{ name: 'Prompt', value: 'prompt' },
-					{ name: 'Tag', value: 'tag' },
-					{ name: 'Topic', value: 'topic' },
-					{ name: 'URL Report', value: 'urlReport' },
+					{ name: 'Brand', value: 'brand', description: 'Tracked brands and their domains' },
+					{ name: 'Brand Report', value: 'brandReport', description: 'Brand visibility, sentiment, and position analytics' },
+					{ name: 'Chat', value: 'chat', description: 'AI chat interactions tracked by Peec AI' },
+					{ name: 'Domain Report', value: 'domainReport', description: 'Domain citation and visibility analytics' },
+					{ name: 'Model', value: 'model', description: 'AI models being monitored' },
+					{ name: 'Project', value: 'project', description: 'Peec AI monitoring projects' },
+					{ name: 'Prompt', value: 'prompt', description: 'Search prompts used for monitoring' },
+					{ name: 'Tag', value: 'tag', description: 'Tags for organizing prompts and reports' },
+					{ name: 'Topic', value: 'topic', description: 'Topic categories for analysis' },
+					{ name: 'URL Report', value: 'urlReport', description: 'URL-level citation and visibility analytics' },
 				],
 				default: 'project',
 			},
@@ -62,7 +66,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['project'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many projects' },
+					{ name: 'Get Many', value: 'getAll', action: 'List all projects' },
 				],
 				default: 'getAll',
 			},
@@ -75,7 +79,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['brand'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many brands' },
+					{ name: 'Get Many', value: 'getAll', action: 'List tracked brands for a project' },
 				],
 				default: 'getAll',
 			},
@@ -88,7 +92,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['prompt'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many prompts' },
+					{ name: 'Get Many', value: 'getAll', action: 'List search prompts for a project' },
 				],
 				default: 'getAll',
 			},
@@ -101,7 +105,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['tag'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many tags' },
+					{ name: 'Get Many', value: 'getAll', action: 'List tags for a project' },
 				],
 				default: 'getAll',
 			},
@@ -114,7 +118,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['topic'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many topics' },
+					{ name: 'Get Many', value: 'getAll', action: 'List topics for a project' },
 				],
 				default: 'getAll',
 			},
@@ -127,7 +131,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['model'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many models' },
+					{ name: 'Get Many', value: 'getAll', action: 'List monitored AI models' },
 				],
 				default: 'getAll',
 			},
@@ -140,8 +144,8 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['chat'] } },
 				options: [
-					{ name: 'Get Many', value: 'getAll', action: 'Get many chats' },
-					{ name: 'Get Content', value: 'getContent', action: 'Get chat content' },
+					{ name: 'Get Many', value: 'getAll', action: 'List AI chat interactions' },
+					{ name: 'Get Content', value: 'getContent', action: 'Get full content of a chat' },
 				],
 				default: 'getAll',
 			},
@@ -154,7 +158,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['brandReport'] } },
 				options: [
-					{ name: 'Get', value: 'get', action: 'Get brand report' },
+					{ name: 'Get', value: 'get', action: 'Get brand visibility and sentiment report' },
 				],
 				default: 'get',
 			},
@@ -167,7 +171,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['domainReport'] } },
 				options: [
-					{ name: 'Get', value: 'get', action: 'Get domain report' },
+					{ name: 'Get', value: 'get', action: 'Get domain citation report' },
 				],
 				default: 'get',
 			},
@@ -180,7 +184,7 @@ export class PeecAi implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['urlReport'] } },
 				options: [
-					{ name: 'Get', value: 'get', action: 'Get URL report' },
+					{ name: 'Get', value: 'get', action: 'Get URL citation report' },
 				],
 				default: 'get',
 			},
@@ -189,12 +193,13 @@ export class PeecAi implements INodeType {
 
 			// Project ID — required for all resources except project
 			{
-				displayName: 'Project ID',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
-				type: 'string',
+				type: 'options',
+				typeOptions: { loadOptionsMethod: 'getProjects' },
 				required: true,
 				default: '',
-				description: 'The Peec.ai project ID',
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 				displayOptions: {
 					show: {
 						resource: ['brand', 'prompt', 'tag', 'topic', 'model', 'chat', 'brandReport', 'domainReport', 'urlReport'],
@@ -209,22 +214,34 @@ export class PeecAi implements INodeType {
 				type: 'string',
 				required: true,
 				default: '',
-				description: 'The chat ID to retrieve',
+				description: 'The ID of the chat to get content for',
 				displayOptions: {
 					show: { resource: ['chat'], operation: ['getContent'] },
 				},
 			},
 
-			// Limit & Offset — for all getAll operations
+			// Return All — for all getAll operations
+			{
+				displayName: 'Return All',
+				name: 'returnAll',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to return all results or only up to a given limit',
+				displayOptions: {
+					show: { operation: ['getAll'] },
+				},
+			},
+
+			// Limit — shown only when returnAll is false
 			{
 				displayName: 'Limit',
 				name: 'limit',
 				type: 'number',
-				typeOptions: { minValue: 1, maxValue: 1000 },
-				default: 100,
+				typeOptions: { minValue: 1 },
+				default: 50,
 				description: 'Max number of results to return',
 				displayOptions: {
-					show: { operation: ['getAll'] },
+					show: { operation: ['getAll'], returnAll: [false] },
 				},
 			},
 			{
@@ -235,7 +252,7 @@ export class PeecAi implements INodeType {
 				default: 0,
 				description: 'Number of results to skip (for pagination)',
 				displayOptions: {
-					show: { operation: ['getAll'] },
+					show: { operation: ['getAll'], returnAll: [false] },
 				},
 			},
 
@@ -243,9 +260,9 @@ export class PeecAi implements INodeType {
 			{
 				displayName: 'Start Date',
 				name: 'startDate',
-				type: 'string',
+				type: 'dateTime',
+				typeOptions: { dateOnly: true },
 				default: '',
-				placeholder: 'YYYY-MM-DD',
 				description: 'Filter from this date (inclusive)',
 				displayOptions: {
 					show: {
@@ -257,9 +274,9 @@ export class PeecAi implements INodeType {
 			{
 				displayName: 'End Date',
 				name: 'endDate',
-				type: 'string',
+				type: 'dateTime',
+				typeOptions: { dateOnly: true },
 				default: '',
-				placeholder: 'YYYY-MM-DD',
 				description: 'Filter until this date (inclusive)',
 				displayOptions: {
 					show: {
@@ -275,10 +292,10 @@ export class PeecAi implements INodeType {
 				name: 'dimensions',
 				type: 'multiOptions',
 				options: [
-					{ name: 'Model', value: 'model_id' },
-					{ name: 'Prompt', value: 'prompt_id' },
-					{ name: 'Tag', value: 'tag_id' },
-					{ name: 'Topic', value: 'topic_id' },
+					{ name: 'Model', value: 'model_id', description: 'Break down by AI model (ChatGPT, Perplexity, etc.)' },
+					{ name: 'Prompt', value: 'prompt_id', description: 'Break down by search prompt' },
+					{ name: 'Tag', value: 'tag_id', description: 'Break down by tag' },
+					{ name: 'Topic', value: 'topic_id', description: 'Break down by topic category' },
 				],
 				default: [],
 				description: 'Break down results by these dimensions',
@@ -296,7 +313,7 @@ export class PeecAi implements INodeType {
 				type: 'fixedCollection',
 				typeOptions: { multipleValues: true },
 				default: {},
-				description: 'Server-side filters for report data',
+				description: 'Filter report data by specific fields',
 				displayOptions: {
 					show: {
 						resource: ['brandReport', 'domainReport', 'urlReport'],
@@ -310,9 +327,16 @@ export class PeecAi implements INodeType {
 							{
 								displayName: 'Field',
 								name: 'field',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. brand_id, classification',
+								type: 'options',
+								options: [
+									{ name: 'Brand', value: 'brand_id' },
+									{ name: 'Classification', value: 'classification' },
+									{ name: 'Model', value: 'model_id' },
+									{ name: 'Prompt', value: 'prompt_id' },
+									{ name: 'Tag', value: 'tag_id' },
+									{ name: 'Topic', value: 'topic_id' },
+								],
+								default: 'brand_id',
 								description: 'The field to filter on',
 							},
 							{
@@ -340,81 +364,76 @@ export class PeecAi implements INodeType {
 		],
 	};
 
+	methods = {
+		loadOptions: {
+			async getProjects(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const response = await this.helpers.httpRequestWithAuthentication.call(this, 'peecAiApi', {
+					method: 'GET' as IHttpRequestMethods,
+					url: `${BASE_URL}/projects`,
+					qs: { limit: 100 },
+					json: true,
+				});
+				const projects = (response as { data: Array<{ id: string; name: string }> }).data;
+				return projects.map((p) => ({
+					name: p.name,
+					value: p.id,
+				}));
+			},
+		},
+	};
+
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		const resource = this.getNodeParameter('resource', 0) as string;
-		const operation = this.getNodeParameter('operation', 0) as string;
-
 		for (let i = 0; i < items.length; i++) {
 			try {
+				const resource = this.getNodeParameter('resource', i) as string;
+				const operation = this.getNodeParameter('operation', i) as string;
 				let responseData: unknown;
 
 				if (resource === 'project' && operation === 'getAll') {
-					responseData = await apiRequest.call(this, 'GET', '/projects', {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					});
+					responseData = await getAllItems.call(this, i, '/projects');
 				}
 
 				else if (resource === 'brand' && operation === 'getAll') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
-					responseData = await apiRequest.call(this, 'GET', `/projects/${projectId}/brands`, {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					});
+					responseData = await getAllItems.call(this, i, '/brands', { project_id: projectId });
 				}
 
 				else if (resource === 'prompt' && operation === 'getAll') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
-					responseData = await apiRequest.call(this, 'GET', `/projects/${projectId}/prompts`, {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					});
+					responseData = await getAllItems.call(this, i, '/prompts', { project_id: projectId });
 				}
 
 				else if (resource === 'tag' && operation === 'getAll') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
-					responseData = await apiRequest.call(this, 'GET', `/projects/${projectId}/tags`, {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					});
+					responseData = await getAllItems.call(this, i, '/tags', { project_id: projectId });
 				}
 
 				else if (resource === 'topic' && operation === 'getAll') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
-					responseData = await apiRequest.call(this, 'GET', `/projects/${projectId}/topics`, {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					});
+					responseData = await getAllItems.call(this, i, '/topics', { project_id: projectId });
 				}
 
 				else if (resource === 'model' && operation === 'getAll') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
-					responseData = await apiRequest.call(this, 'GET', `/projects/${projectId}/models`, {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					});
+					responseData = await getAllItems.call(this, i, '/models', { project_id: projectId });
 				}
 
 				else if (resource === 'chat' && operation === 'getAll') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
-					const qs: IDataObject = {
-						limit: this.getNodeParameter('limit', i) as number,
-						offset: this.getNodeParameter('offset', i) as number,
-					};
+					const extraQs: IDataObject = { project_id: projectId };
 					const startDate = this.getNodeParameter('startDate', i) as string;
 					const endDate = this.getNodeParameter('endDate', i) as string;
-					if (startDate) qs.start_date = startDate;
-					if (endDate) qs.end_date = endDate;
-					responseData = await apiRequest.call(this, 'GET', `/projects/${projectId}/chats`, qs);
+					if (startDate) extraQs.start_date = startDate.substring(0, 10);
+					if (endDate) extraQs.end_date = endDate.substring(0, 10);
+					responseData = await getAllItems.call(this, i, '/chats', extraQs);
 				}
 
 				else if (resource === 'chat' && operation === 'getContent') {
 					const projectId = this.getNodeParameter('projectId', i) as string;
 					const chatId = this.getNodeParameter('chatId', i) as string;
-					// Chat content endpoint does not use the data envelope
-					responseData = await apiRequestRaw.call(this, 'GET', `/projects/${projectId}/chats/${chatId}`);
+					responseData = await apiRequestRaw.call(this, 'GET', `/chats/${encodeURIComponent(chatId)}/content`, { project_id: projectId });
 				}
 
 				else if (['brandReport', 'domainReport', 'urlReport'].includes(resource) && operation === 'get') {
@@ -424,15 +443,15 @@ export class PeecAi implements INodeType {
 						domainReport: 'domains',
 						urlReport: 'urls',
 					};
-					const body: IDataObject = {};
+					const body: IDataObject = { project_id: projectId };
 
 					const dimensions = this.getNodeParameter('dimensions', i) as string[];
 					if (dimensions.length > 0) body.dimensions = dimensions;
 
 					const startDate = this.getNodeParameter('startDate', i) as string;
 					const endDate = this.getNodeParameter('endDate', i) as string;
-					if (startDate) body.start_date = startDate;
-					if (endDate) body.end_date = endDate;
+					if (startDate) body.start_date = startDate.substring(0, 10);
+					if (endDate) body.end_date = endDate.substring(0, 10);
 
 					const filtersParam = this.getNodeParameter('filters', i) as {
 						filterValues?: Array<{ field: string; operator: string; values: string }>;
@@ -441,25 +460,36 @@ export class PeecAi implements INodeType {
 						body.filters = filtersParam.filterValues.map((f) => ({
 							field: f.field,
 							operator: f.operator,
-							values: f.values.split(',').map((v) => v.trim()),
+							values: f.values.split(',').map((v) => v.trim()).filter((v) => v !== ''),
 						}));
 					}
 
 					responseData = await apiRequestPost.call(
 						this,
-						`/projects/${projectId}/reports/${reportPath[resource]}`,
+						`/reports/${reportPath[resource]}`,
 						body,
+					);
+				}
+
+				else {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Unsupported resource/operation: ${resource}/${operation}`,
+						{ itemIndex: i },
 					);
 				}
 
 				// Normalize to array
 				const results = Array.isArray(responseData) ? responseData : [responseData];
-				returnData.push(...results.map((item) => ({ json: item as IDataObject })));
+				returnData.push(...results.map((item) => ({ json: item as IDataObject, pairedItem: i })));
 
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({ json: { error: (error as Error).message }, pairedItem: i });
 				} else {
+					if ((error as { response?: unknown }).response) {
+						throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
+					}
 					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 				}
 			}
@@ -467,6 +497,43 @@ export class PeecAi implements INodeType {
 
 		return [returnData];
 	}
+}
+
+/**
+ * Handle returnAll pagination or limited fetch for getAll operations.
+ */
+async function getAllItems(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	path: string,
+	extraQs?: IDataObject,
+): Promise<unknown[]> {
+	const returnAll = this.getNodeParameter('returnAll', itemIndex) as boolean;
+
+	if (returnAll) {
+		const allResults: unknown[] = [];
+		let offset = 0;
+		const batchSize = 100;
+		let batch: unknown;
+		do {
+			batch = await apiRequest.call(this, 'GET', path, { ...extraQs, limit: batchSize, offset });
+			if (!Array.isArray(batch)) {
+				throw new NodeOperationError(
+					this.getNode(),
+					`Unexpected API response for ${path}: expected array`,
+					{ itemIndex },
+				);
+			}
+			allResults.push(...batch);
+			offset += batchSize;
+		} while (batch.length === batchSize);
+		return allResults;
+	}
+
+	const limit = this.getNodeParameter('limit', itemIndex) as number;
+	const offsetParam = this.getNodeParameter('offset', itemIndex) as number;
+	const result = await apiRequest.call(this, 'GET', path, { ...extraQs, limit, offset: offsetParam });
+	return Array.isArray(result) ? result : [result];
 }
 
 /** GET request — unwraps { data: T } envelope. */

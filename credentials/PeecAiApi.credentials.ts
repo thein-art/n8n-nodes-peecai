@@ -8,7 +8,9 @@ import type {
 export class PeecAiApi implements ICredentialType {
 	name = 'peecAiApi';
 
-	displayName = 'Peec.ai API';
+	displayName = 'Peec AI API';
+
+	icon = { light: 'file:peecAi.svg', dark: 'file:peecAi.svg' } as const;
 
 	documentationUrl = 'https://github.com/thein-art/n8n-nodes-peecai#credentials';
 
