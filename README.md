@@ -137,6 +137,11 @@ npm run dev      # Watch mode for development
 
 ## Version History
 
+### 0.3.2
+- Fixed release pipeline: merged publish into release workflow
+- Updated GitHub Actions to v6 (checkout, setup-node)
+- Bumped @types/node to v25
+
 ### 0.3.1
 - CI/CD pipeline: automated releases via git tags, npm publish with OIDC trusted publishing
 - Added Dependabot for dependency updates
