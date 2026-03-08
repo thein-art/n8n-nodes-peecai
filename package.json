@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-peecai",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "n8n community node for the Peec AI API — AI Search Analytics for brand visibility, sentiment, and citations",
   "license": "MIT",
   "author": {
