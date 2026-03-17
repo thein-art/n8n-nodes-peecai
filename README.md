@@ -145,6 +145,9 @@ npm run dev      # Watch mode for development
 
 ## Version History
 
+### 0.5.1
+- Updated devDependencies: @types/node 25.5.0, @n8n/node-cli 0.23.0, n8n-workflow 2.12.0, vitest 4.1.0
+
 ### 0.5.0
 - Extracted helper functions to eliminate code duplication (date parsing, filter parsing)
 - Added TypeScript interfaces for API response types
