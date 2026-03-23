@@ -145,6 +145,11 @@ npm run dev      # Watch mode for development
 
 ## Version History
 
+### 0.6.0
+- Added `country_code` and `date` dimensions for report breakdowns
+- Added `country_code` filter field for all reports and queries
+- Added chat filters: filter chats by brand, model, or prompt ID
+
 ### 0.5.1
 - Updated devDependencies: @types/node 25.5.0, @n8n/node-cli 0.23.0, n8n-workflow 2.12.0, vitest 4.1.0
 

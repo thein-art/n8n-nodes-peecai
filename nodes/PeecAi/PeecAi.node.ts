@@ -353,12 +353,49 @@ export class PeecAi implements INodeType {
 				},
 			},
 
+			// Chat filters — optional filters for chat listing
+			{
+				displayName: 'Additional Fields',
+				name: 'chatFilters',
+				type: 'collection',
+				placeholder: 'Add Field',
+				default: {},
+				displayOptions: {
+					show: { resource: ['chat'], operation: ['getAll'] },
+				},
+				options: [
+					{
+						displayName: 'Brand ID',
+						name: 'brand_id',
+						type: 'string',
+						default: '',
+						description: 'Filter chats by brand ID',
+					},
+					{
+						displayName: 'Model ID',
+						name: 'model_id',
+						type: 'string',
+						default: '',
+						description: 'Filter chats by AI model ID',
+					},
+					{
+						displayName: 'Prompt ID',
+						name: 'prompt_id',
+						type: 'string',
+						default: '',
+						description: 'Filter chats by prompt ID',
+					},
+				],
+			},
+
 			// Dimensions — for reports
 			{
 				displayName: 'Dimensions',
 				name: 'dimensions',
 				type: 'multiOptions',
 				options: [
+					{ name: 'Country Code', value: 'country_code', description: 'Break down by country' },
+					{ name: 'Date', value: 'date', description: 'Break down by date' },
 					{ name: 'Model', value: 'model_id', description: 'Break down by AI model (ChatGPT, Perplexity, etc.)' },
 					{ name: 'Prompt', value: 'prompt_id', description: 'Break down by search prompt' },
 					{ name: 'Tag', value: 'tag_id', description: 'Break down by tag' },
@@ -398,6 +435,7 @@ export class PeecAi implements INodeType {
 								options: [
 									{ name: 'Brand', value: 'brand_id' },
 									{ name: 'Classification', value: 'classification' },
+									{ name: 'Country Code', value: 'country_code' },
 									{ name: 'Domain', value: 'domain' },
 									{ name: 'Model', value: 'model_id' },
 									{ name: 'Prompt', value: 'prompt_id' },
@@ -494,6 +532,10 @@ export class PeecAi implements INodeType {
 					const projectId = this.getNodeParameter('projectId', i) as string;
 					const extraQs: IDataObject = { project_id: projectId };
 					applyDateParams(this, i, extraQs);
+					const chatFilters = this.getNodeParameter('chatFilters', i) as IDataObject;
+					if (chatFilters.brand_id) extraQs.brand_id = chatFilters.brand_id;
+					if (chatFilters.model_id) extraQs.model_id = chatFilters.model_id;
+					if (chatFilters.prompt_id) extraQs.prompt_id = chatFilters.prompt_id;
 					responseData = await getAllItems.call(this, i, '/chats', extraQs);
 				}
 
