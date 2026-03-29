@@ -50,7 +50,7 @@
   "devDependencies": {
     "@n8n/node-cli": "^0.23.0",
     "n8n-workflow": "*",
-    "typescript": "^5.7.0",
+    "typescript": "^6.0.2",
     "@types/node": "^25.3.5",
     "vitest": "^4.1.0"
   }
